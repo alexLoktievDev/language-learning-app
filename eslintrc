@@ -1,0 +1,115 @@
+{
+  "root": true,
+  "extends": [
+    "airbnb",
+    "airbnb/hooks",
+    "airbnb-typescript",
+    "prettier"
+  ],
+  "plugins": [
+    "react",
+    "react-hooks",
+    "jest",
+    "testing-library",
+    "styled-components-a11y"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "ignorePatterns": [
+    "coverage/"
+  ],
+  "env": {
+    "jest/globals": true
+  },
+  "rules": {
+    "jsx-a11y/anchor-is-valid": "off",
+    "@typescript-eslint/ban-ts-comment": "error",
+    "@typescript-eslint/no-use-before-define": "error",
+    "import/prefer-default-export": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-no-useless-fragment": "off",
+    "react/jsx-props-no-spreading": "off",
+    "react/function-component-definition": "off",
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-useless-constructor": "off",
+    "@typescript-eslint/member-ordering": [
+      "error",
+      {
+        "default": {
+          "optionalityOrder": "required-first"
+        }
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ],
+    "react/require-default-props": "off",
+    "semi": [
+      "error",
+      "always"
+    ],
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allowAfterThis": true
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": [
+      1,
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-use-before-define": [
+      "error",
+      {
+        "functions": true,
+        "classes": true,
+        "variables": true,
+        "allowNamedExports": false
+      }
+    ],
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        "required": {
+          "some": [
+            "nesting",
+            "id"
+          ]
+        }
+      }
+    ],
+    "jsx-a11y/label-has-for": [
+      "error",
+      {
+        "required": {
+          "some": [
+            "nesting",
+            "id"
+          ]
+        }
+      }
+    ]
+  }
+}

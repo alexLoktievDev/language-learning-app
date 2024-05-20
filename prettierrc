@@ -1,0 +1,28 @@
+{
+  "singleQuote": true,
+  "printWidth": 100,
+  "arrowParens": "avoid",
+  "importOrder": [
+    "^react",
+    "<THIRD_PARTY_MODULES>",
+    "@store",
+    "@components",
+    "@components/(.*)$",
+    "@helpers",
+    "@helpers/(.*)$",
+    "^@testing-library",
+    "@types$",
+    "^types$",
+    "^styled-components",
+    "@styles",
+    "@styles/(.*)$",
+    "^(?!.*[.](style))[./].*$",
+    "^(?!.*[.](css))[./].*$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderCaseInsensitive": true,
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports"
+  ]
+}

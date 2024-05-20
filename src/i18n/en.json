@@ -1,0 +1,5 @@
+{
+  "errors": {
+    "auth/invalid-credential": "Your login credentials no longer seem to work. Please refresh your login details and try again, or contact support for assistance."
+  }
+}

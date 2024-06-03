@@ -16,8 +16,10 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/react-speech-recognition": "^3.9.5",
+    "axios": "^1.7.2",
     "firebase": "^10.11.1",
     "i18next": "^23.11.4",
+    "mic-recorder-to-mp3": "^2.2.2",
     "notistack": "^3.0.1",
     "openai": "^4.47.1",
     "react": "^18.3.1",
@@ -29,7 +31,9 @@
     "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
     "react-speech-kit": "^3.0.1",
+    "react-speech-recognition": "^3.10.0",
     "typescript": "^4.4.2",
+    "uuid": "^9.0.1",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
@@ -41,9 +45,9 @@
     "eject": "craco eject",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
-    "prepare": "husky install",
     "prettier": "prettier src --check",
     "prettier:fix": "yarn prettier -- --write",
+    "prepare": "husky install",
     "format": "prettier:fix && npm run lint:fix"
   },
   "eslintConfig": {
@@ -67,6 +71,7 @@
   "devDependencies": {
     "@types/firebase": "^3.2.1",
     "craco": "0.0.3",
+    "husky": "^9.0.11",
     "prettier": "3.2.5"
   }
 }

@@ -1,6 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import {
+  getFunctions,
+  httpsCallable,
+  connectFunctionsEmulator,
+} from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB035BeFRnThJQ2GnsDEEjL7iI1deGP3jE",
@@ -17,6 +21,8 @@ export const app = initializeApp(firebaseConfig);
 export const analytics = getAnalytics(app);
 
 export const functions = getFunctions(app);
+
+connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 
 export interface OpenAIResponse {
   reply: string;

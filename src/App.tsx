@@ -33,6 +33,23 @@ const theme = createTheme({
         },
       },
     },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "white",
+          },
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "white",
+          },
+
+          color: "#FFF",
+          path: {
+            color: "#FFF",
+          },
+        },
+      },
+    },
 
     // Global CSS overrides
     MuiCssBaseline: {

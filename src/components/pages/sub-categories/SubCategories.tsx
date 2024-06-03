@@ -1,16 +1,6 @@
 import { FC } from "react";
 import { Chat } from "@components/chat";
-import {
-  Container,
-  Card,
-  styled,
-  CardMedia,
-  Skeleton,
-  CardContent,
-  Grid,
-  Typography,
-  Box,
-} from "@mui/material";
+import { Typography, Box } from "@mui/material";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { useQuery } from "react-query";
 import { app } from "@helpers";

@@ -7,7 +7,7 @@ import {
 } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB035BeFRnThJQ2GnsDEEjL7iI1deGP3jE",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "language-learning-app-41e88.firebaseapp.com",
   projectId: "language-learning-app-41e88",
   storageBucket: "language-learning-app-41e88.appspot.com",

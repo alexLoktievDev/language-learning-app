@@ -7,6 +7,9 @@ import {
   ResetPassword,
   Dashboard,
   NotFound,
+  AddSubCategory,
+  SubCategoriesDetailed,
+  AdminSubCategoryList,
 } from "@components/pages";
 import { MainTemplate } from "@components/templates";
 import { SuperAdminMainTemplate } from "@components/templates/super-admin-main-template";
@@ -25,6 +28,10 @@ export const userNavigationItems: (RouteObject & {
       {
         path: ":categoryId",
         element: <SubCategories />,
+      },
+      {
+        path: ":categoryId/sub-category/:subCategoryId",
+        element: <SubCategoriesDetailed />,
       },
     ],
   },
@@ -79,10 +86,6 @@ const authorisedCommonRoutes: RouteObject[] = [
 export const authorisedAdminOnlyRoutes: RouteObject[] = [
   {
     path: "/dashboard",
-    element: <Navigate to="/dashboard/1" />,
-  },
-  {
-    path: "/dashboard/:page",
     element: (
       <ProtectedRoute privateRoute redirectPath="/sign-in">
         <SuperAdminMainTemplate>
@@ -90,6 +93,50 @@ export const authorisedAdminOnlyRoutes: RouteObject[] = [
         </SuperAdminMainTemplate>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/add-sub-category",
+    element: (
+      <ProtectedRoute privateRoute redirectPath="/sign-in">
+        <SuperAdminMainTemplate>
+          <AddSubCategory />
+        </SuperAdminMainTemplate>
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: ":categoryId/sub-category/:subCategoryId",
+        element: (
+          <ProtectedRoute privateRoute redirectPath="/sign-in">
+            <SuperAdminMainTemplate>
+              <AddSubCategory />
+            </SuperAdminMainTemplate>
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/category/:categoryId",
+    element: (
+      <ProtectedRoute privateRoute redirectPath="/sign-in">
+        <SuperAdminMainTemplate>
+          <AdminSubCategoryList />
+        </SuperAdminMainTemplate>
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "sub-category/:subCategoryId",
+        element: (
+          <ProtectedRoute privateRoute redirectPath="/sign-in">
+            <SuperAdminMainTemplate>
+              <AddSubCategory />
+            </SuperAdminMainTemplate>
+          </ProtectedRoute>
+        ),
+      },
+    ],
   },
   ...authorisedCommonRoutes,
 ];

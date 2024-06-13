@@ -33,6 +33,13 @@ const theme = createTheme({
         },
       },
     },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          color: "#000",
+        },
+      },
+    },
     MuiSelect: {
       styleOverrides: {
         root: {
@@ -79,6 +86,8 @@ function App() {
     }
   }, [accessToken, auth, auth?.authorized]);
 
+  console.log(77777777, auth?.user?.role);
+
   return (
     <ThemeProvider theme={theme}>
       <QueryClientProvider client={queryClient}>
@@ -89,7 +98,10 @@ function App() {
         />
 
         <div className="App">
-          <MemoizedRoutesCollection authorized={auth?.authorized} role="user" />
+          <MemoizedRoutesCollection
+            authorized={auth?.authorized}
+            role={auth?.user?.role}
+          />
         </div>
       </QueryClientProvider>
     </ThemeProvider>

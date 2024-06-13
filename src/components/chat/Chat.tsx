@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef } from "react";
+import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { MessageBox } from "react-chat-elements";
 import CloseIcon from "@mui/icons-material/Close";
 import "react-chat-elements/dist/main.css";
@@ -28,6 +28,7 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useTranslation } from "react-i18next";
+import { useSpeechSynthesis } from "react-speech-kit";
 
 type Message = {
   position: "left" | "right";
@@ -36,6 +37,7 @@ type Message = {
   dateString: string;
   audioUrl?: string;
   isLoading?: boolean;
+  language?: string; // Added language property
 };
 
 export type ChatFormValues = {
@@ -47,11 +49,20 @@ const createMarkup = (text: string) => {
   return { __html: htmlString };
 };
 
+const removeEmojis = (text: string) => {
+  return text.replace(
+    /([\uD800-\uDBFF][\uDC00-\uDFFF]|\u2600-\u26FF|\u2700-\u27BF|\uE000-\uF8FF|\uD83C\uD000-\uD83C\uDFFF|\uD83D\uD000-\uD83D\uDFFF|\uD83E\uD000-\uD83E\uDFFF)/g,
+    "",
+  );
+};
+
 const MessageComponent: FC<{
   message: Message;
   playAudio: (audioUrl: string) => void;
   isPlaying: boolean;
-}> = ({ message, playAudio, isPlaying }) => (
+  speakMessage: (text: string, language: string) => void;
+  isSpeaking: boolean;
+}> = ({ message, playAudio, isPlaying, speakMessage, isSpeaking }) => (
   <Stack
     alignItems="center"
     position="relative"
@@ -85,7 +96,12 @@ const MessageComponent: FC<{
           </IconButton>
         )
       ) : null}
-      <IconButton sx={{ minWidth: 30 }}>
+      <IconButton
+        sx={{ minWidth: 30 }}
+        onClick={() =>
+          !isSpeaking && speakMessage(message.text, message.language || "en-US")
+        }
+      >
         <TranslateIcon />
       </IconButton>
     </Stack>
@@ -95,12 +111,16 @@ const MessageComponent: FC<{
 export const Chat: FC<{
   onCloseButtonClick: () => void;
   fullWidth?: boolean;
-}> = ({ onCloseButtonClick, fullWidth, ...rest }) => {
+  assistantContext?: string;
+}> = ({ onCloseButtonClick, fullWidth, assistantContext, ...rest }) => {
   const { t } = useTranslation();
+  const { speak, voices } = useSpeechSynthesis();
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [language, setLanguage] = useState<string>("en-US"); // Default language
+  const [language, setLanguage] = useState<string>("en-US");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [lastSpokenMessage, setLastSpokenMessage] = useState<string>("");
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
 
   const { handleSubmit, watch, setValue, reset, register } =
     useForm<ChatFormValues>();
@@ -114,14 +134,67 @@ export const Chat: FC<{
     interimTranscript,
   } = useSpeechRecognition();
 
+  console.log(99992293344, assistantContext);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const speakMessage = useCallback(
+    (text: string, language: string) => {
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+      }
+      const sanitizedText = removeEmojis(text);
+      const utterance = new SpeechSynthesisUtterance(sanitizedText);
+      let selectedVoice: SpeechSynthesisVoice | null = null;
+
+      if (language === "es-ES") {
+        selectedVoice =
+          (voices.find((voice) =>
+            voice.name.toLowerCase().includes("google español"),
+          ) as any) || null;
+      } else if (language === "uk-UA") {
+        selectedVoice =
+          (voices.find((voice) =>
+            voice.name.toLowerCase().includes("lesya"),
+          ) as any) || null;
+      } else {
+        selectedVoice =
+          (voices.find((voice) =>
+            ["samantha", "victoria", "karen"].some((name) =>
+              voice.name.toLowerCase().includes(name),
+            ),
+          ) as any) || null;
+      }
+
+      if (!selectedVoice) {
+        selectedVoice =
+          (voices.find((voice) =>
+            ["google us english", "google uk english female"].some((name) =>
+              voice.name.toLowerCase().includes(name),
+            ),
+          ) as any) || null;
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      utterance.onend = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
+    },
+    [isSpeaking, voices],
+  );
 
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
       console.error(t("Browser doesn't support speech recognition."));
       return;
     }
-    setValue("message", finalTranscript + interimTranscript);
+    if (!listening) {
+      setValue("message", finalTranscript + interimTranscript);
+    }
   }, [
     transcript,
     setValue,
@@ -129,12 +202,22 @@ export const Chat: FC<{
     finalTranscript,
     interimTranscript,
     t,
+    listening,
   ]);
 
-  /**
-   * Handle form submission
-   * @param {ChatFormValues} param0 - form values
-   */
+  useEffect(() => {
+    if (
+      messages.length > 0 &&
+      messages[messages.length - 1].position === "left"
+    ) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.text !== lastSpokenMessage) {
+        speakMessage(lastMessage.text, language);
+        setLastSpokenMessage(lastMessage.text);
+      }
+    }
+  }, [messages, language, speakMessage, lastSpokenMessage]);
+
   const onSubmit = async ({ message }: ChatFormValues) => {
     setMessages((prevState) => [
       ...prevState,
@@ -143,17 +226,18 @@ export const Chat: FC<{
         type: "text",
         text: message,
         dateString: new Date().toLocaleTimeString(),
+        language,
       },
     ]);
 
     reset();
-    resetTranscript(); // Clear the transcript after submitting
+    resetTranscript();
 
     setIsTyping(true);
     try {
       const result = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/chatWithOpenAIHttp`,
-        { prompt: message },
+        { prompt: message, assistantContext },
         { headers: { "Content-Type": "application/json" } },
       );
 
@@ -166,12 +250,10 @@ export const Chat: FC<{
           type: "text",
           text: reply,
           dateString: new Date().toLocaleTimeString(),
-          isLoading: true,
+          isLoading: false,
+          language,
         },
       ]);
-
-      // Convert response text to speech
-      await handleConvertToSpeech(reply);
     } catch (error) {
       console.error(t("Failed to get a response from OpenAI"), error);
     } finally {
@@ -179,10 +261,6 @@ export const Chat: FC<{
     }
   };
 
-  /**
-   * Handle key down event for textarea
-   * @param {React.KeyboardEvent<HTMLTextAreaElement>} event - key down event
-   */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -190,55 +268,6 @@ export const Chat: FC<{
     }
   };
 
-  /**
-   * Handle converting text to speech
-   * @param {string} textToConvert - text to convert to speech
-   */
-  const handleConvertToSpeech = async (textToConvert: string) => {
-    setMessages((prevState) => {
-      const newState = [...prevState];
-      const lastIndex = newState.length - 1;
-      newState[lastIndex].isLoading = true;
-      return newState;
-    });
-
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/synthesizeSpeech`,
-        { text: textToConvert, voiceId: "21m00Tcm4TlvDq8ikWAM", language },
-        {
-          headers: { "Content-Type": "application/json" },
-          responseType: "arraybuffer",
-        },
-      );
-
-      const audioBlob = new Blob([response.data], { type: "audio/mpeg" });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      setMessages((prevState) => {
-        const newState = [...prevState];
-        const lastIndex = newState.length - 1;
-        newState[lastIndex].audioUrl = audioUrl;
-        newState[lastIndex].isLoading = false;
-        return newState;
-      });
-
-      playAudio(audioUrl);
-    } catch (error) {
-      console.error(t("Error converting text to speech:"), error);
-      setMessages((prevState) => {
-        const newState = [...prevState];
-        const lastIndex = newState.length - 1;
-        newState[lastIndex].isLoading = false;
-        return newState;
-      });
-    }
-  };
-
-  /**
-   * Play audio from given URL
-   * @param {string} audioUrl - URL of the audio to play
-   */
   const playAudio = (audioUrl: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -252,19 +281,27 @@ export const Chat: FC<{
     };
   };
 
-  /**
-   * Start listening for audio input
-   */
   const startListening = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+    resetTranscript(); // Clear the transcript before starting a new session
     SpeechRecognition.startListening({ continuous: true, language });
   };
 
-  /**
-   * Stop listening for audio input and process the audio
-   */
   const stopListening = () => {
     SpeechRecognition.stopListening();
+    resetTranscript(); // Clear the transcript when stopping
   };
+
+  useEffect(() => {
+    setValue("message", transcript);
+  }, [transcript, setValue]);
 
   return (
     <Stack
@@ -336,11 +373,7 @@ export const Chat: FC<{
             >
               <MenuItem value="en-US">{t("English (US)")}</MenuItem>
               <MenuItem value="es-ES">{t("Spanish (Spain)")}</MenuItem>
-              <MenuItem value="fr-FR">{t("French (France)")}</MenuItem>
-              <MenuItem value="de-DE">{t("German (Germany)")}</MenuItem>
-              <MenuItem value="zh-CN">{t("Chinese (Mandarin)")}</MenuItem>
               <MenuItem value="uk-UA">{t("Ukrainian")}</MenuItem>
-              <MenuItem value="ru-RU">{t("Russian")}</MenuItem>
             </Select>
 
             {!fullWidth && (
@@ -369,6 +402,8 @@ export const Chat: FC<{
               message={msg}
               playAudio={playAudio}
               isPlaying={isPlaying}
+              speakMessage={speakMessage}
+              isSpeaking={isSpeaking}
             />
           ))}
 
@@ -423,7 +458,7 @@ export const Chat: FC<{
           <IconButton
             type="submit"
             sx={{ minWidth: 30 }}
-            disabled={!watch("message")?.length}
+            disabled={listening || !watch("message")?.length}
           >
             <SendIcon sx={{ color: "#fff" }} />
           </IconButton>
